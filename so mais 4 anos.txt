@@ -1,0 +1,7 @@
+sqlalchemy
+arquitetura hexagonal (adapter - logica + service - banco, models - tabelas, schemas - corpo dos routers/endpoints, controllers - routers, database - configs do banco)
+
+paginação (rows_per_page + page) - offset pagination
+autenticação com jwt
+autorização com pedro
+envio de email para verificar usuario
