@@ -1,61 +1,52 @@
 from fastapi import FastAPI
-from typing import List, Optional
-from pydantic import BaseModel
+from src.classes import User, DataBank
 
-class User(BaseModel):
-    name : str
-    email: str
-    institute: str
-    adm: Optional[bool] = False
-
-banco : List[User] = []
+bd = DataBank("databases/dataBank.db")
 
 app = FastAPI()
 
 
-@app.get('/users')
-def read():
-    return banco
+@app.get("/users")
+def read_all_users():
+    return bd.user_list()
 
 
-@app.get('/users/{email}')
-def read(email : str):
-    for user in banco:
-        if user.email == email:
-            return user
-    return {'mensage' : 'Error User doesnt exist'}
+@app.get("/users/search/{id}")
+def read_user(id):
+    return bd.search("id", id)
 
 
-@app.post('/users')
-def create(userQuerry : User):
-    for user in banco:
-        if user.email == userQuerry.email:
-            return {'mensage' : 'Error Email already in use'}
-    banco.append(userQuerry)
-    return {'mensage' : 'Created with sucess'}
+@app.get("/users/search")
+def read_user(campo : str, dado):
+    return bd.search(campo, dado)
 
 
-@app.put('/users/{email}')
-def read(email: str, newUserInfo: User):
-    for user in banco:
-        if user.email == email:
-            banco[banco.index(user)] = newUserInfo
-            return {'mensage' : 'User info updated'}
-    return {'mensage' : 'Error User doesnt exist'}
+@app.post("/users")
+def add_user(user : User):
+    try:
+        bd.add_user(user)
+        return {'mensagem' : 'Usuario cadastrado'}
+    
+    except Exception as e:
+        return {'mensagem' : f'Erro no cadastro: {e}'}
 
 
-@app.delete('/users/{email}')
-def delete(email : str):
-    for user in banco:
-        if user.email == email:
-            banco.remove(user)
-            return {'mensage' : 'Deleted with sucess'}
-    return {'mensage' : 'Error User doesnt exist'}
+@app.delete("/users")
+def delete_user(user : User):
+    try:
+        bd.delete(user.id)
+        return {'mensagem' : 'Usuario deletado'}
+    
+    except Exception as e:
+        return {'mensagem' : f'Erro no apagamento: {e}'}
 
 
-@app.get('/login')
-def login(userQuerry : User):
-    for user in banco:
-        if user == userQuerry:
-            return True
-    return False
+@app.delete("/users/")
+def delete_user(id : int):
+    try:
+        bd.delete(id)
+        return {'mensagem' : 'Usuario deletado'}
+    
+    except Exception as e:
+        return {'mensagem' : f'Erro no apagamento: {e}'}
+
