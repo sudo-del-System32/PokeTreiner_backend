@@ -1,18 +1,20 @@
 from pydantic import BaseModel, model_validator
+from typing import Optional
+
 
 class User(BaseModel):
-    id: int
+    id: Optional[int]
     name: str
     email: str
     password: str
-    card_id: int
+    card_id: Optional[int]
 
     #verificar essa verificaçao com o pedro
-    @model_validator(mode="after")
-    def check_id(self):
-        if self.id < 1:
-            raise ValueError("Card id can not be less than 1")
-        return self
+    # @model_validator(mode="after")
+    # def check_id(self):
+    #     if self.id < 1:
+    #         raise ValueError("Card id can not be less than 1")
+    #     return self
     
     @model_validator(mode="after")
     def check_name(self):

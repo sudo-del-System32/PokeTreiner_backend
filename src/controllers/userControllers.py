@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from src.classes import User, DataBank
 from src.schemas.userSchema import UserSchema
-from src.services.userService import UserService
+from src.adapters.userAdapter import UserAdapter
 
 bd = DataBank("databases/dataBank.db")
 
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/user")
 async def read_all_users(request: Request):
     # djeizu: dict = await request.json() # await utiliza junto de async function
     # if djeizu.get("email") is None:
-    return bd.user_list()
+    return UserAdapter().read_all_users_controller()
 
 
 @router.get("/{id}")
@@ -26,9 +26,8 @@ def read_user(campo: str, dado):
 
 
 @router.post("/")
-def add_user(user: User):
-    service = UserService()
-    service.add_user(new_user=user)
+def add_user(schema: UserSchema):
+    UserAdapter().add_user_controller(schema)
 
 @router.delete("/")
 def delete_user(id: int):

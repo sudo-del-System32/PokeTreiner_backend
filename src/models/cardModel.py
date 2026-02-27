@@ -17,7 +17,7 @@ class CardModel(BaseModel):
     # Intergers validators
 
     # Id vem direto do sql precisa-se de verificação?
-    @model_validator
+    @model_validator(mode="after")
     def check_id(self):
         if self.id < 1:
             raise ValueError("Card id can not be less than 1")
@@ -25,20 +25,20 @@ class CardModel(BaseModel):
         return self
     
     # Id vem direto do sql precisa-se de verificação?
-    @model_validator
+    @model_validator(mode="after")
     def check_owner_id(self):
         if self.owner_id < 1:
             raise ValueError("Card owner id can not be less than 1")
 
         return self
 
-    @model_validator
+    @model_validator(mode="after")
     def check_health(self):
         if self.health < 1:
             raise ValueError("Card health can not be less than 1")
         return self
 
-    @model_validator
+    @model_validator(mode="after")
     def check_attack_damage(self):
         if self.health < 1:
             raise ValueError("Card health can not be less than 1")

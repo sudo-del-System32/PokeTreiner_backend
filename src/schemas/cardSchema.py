@@ -11,7 +11,7 @@ class CardSchema(BaseModel):
     attack_damage: int
     description: Optional[str]
 
-
+    # Int validators
     @model_validator(mode="after")
     def check_health(self):
         if self.health < 1:

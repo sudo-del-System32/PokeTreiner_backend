@@ -5,11 +5,11 @@ cursor = connect.cursor()
 
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         email TEXT UNIQUE,
-        password TEXT
-        --card_id INTEGER
+        password TEXT,
+        card_id INTEGER
                )
 """
 )
