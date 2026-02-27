@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request
 from src.classes import User, DataBank
 from src.schemas.userSchema import UserSchema
+from src.services.userService import UserService
 
 bd = DataBank("databases/dataBank.db")
 
@@ -26,13 +27,8 @@ def read_user(campo: str, dado):
 
 @router.post("/")
 def add_user(user: User):
-    try:
-        bd.add_user(user)
-        return {"mensagem": "Usuario cadastrado"}
-
-    except Exception as e:
-        return {"mensagem": f"Erro no cadastro: {e}"}
-
+    service = UserService()
+    service.add_user(new_user=user)
 
 @router.delete("/")
 def delete_user(id: int):

@@ -3,17 +3,15 @@ from pydantic import BaseModel, model_validator
 class User(BaseModel):
     id: int
     name: str
-
     email: str
     password: str
-    
     card_id: int
 
     #verificar essa verificaçao com o pedro
-    @model_validator
+    @model_validator(mode="after")
     def check_id(self):
-        if type(self.id) is not int:
-            raise TypeError("User id needs to be an integer")
+        if self.id < 1:
+            raise ValueError("Card id can not be less than 1")
         return self
     
     @model_validator(mode="after")
