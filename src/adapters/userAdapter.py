@@ -31,7 +31,7 @@ class UserAdapter:
             card_id=None
         )
 
-        new_user_id: int = UserService().add_user(new_user=newUser)
+        new_user_id: int = UserService().add_user(new_user=newUser.model_dump())
         return {"erro": False, "message" : "user added sucessfully", "id": str(new_user_id)}
 
     def update_user_controller(self, id: int, user_to_update: UserEditSchema):

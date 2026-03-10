@@ -14,12 +14,12 @@ class UserService:
 
     def read_all_users(self, query_params: QueryParams):
 
-        user_found = SuperService().find(self.connect, table="users")
+        user_found = SuperService(self.connect).find(table="users")
         
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no users")
         
-        users = SuperService().find(connection=self.connect, table="users", page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
+        users = SuperService(self.connect).find( table="users", page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
 
         found_users: list[UserReturnSchema] = []
 
@@ -40,7 +40,7 @@ class UserService:
     def read_user_by_id(self, query_params: QueryParams):
 
         id = query_params.get("user_id")
-        user_found = SuperService().find(connection=self.connect, table="users", query=f"WHERE id = '{id}'")
+        user_found = SuperService(self.connect).find(table="users", query=f"WHERE id = '{id}'")
         
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -59,7 +59,7 @@ class UserService:
 
     def read_user_by_email(self, query_params: QueryParams):
 
-        user_found = SuperService().find_like(self.connect, table="users", column="email", target=str(query_params.get("user_email")), page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
+        user_found = SuperService(self.connect).find_like(table="users", column="email", target=str(query_params.get("user_email")), page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
         
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -81,7 +81,7 @@ class UserService:
     
     def read_user_by_name(self, query_params: QueryParams):
 
-        user_found = SuperService().find_like(self.connect, table="users", column="name", target=str(query_params.get("user_name")), page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
+        user_found = SuperService(self.connect).find_like(table="users", column="name", target=str(query_params.get("user_name")), page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
 
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -101,9 +101,9 @@ class UserService:
         self.connect.close()
         return output
 
-    def add_user(self, new_user : User):
+    def add_user(self, new_user: dict[str, any]):
         
-        user_found = SuperService().find(connection=self.connect, campo="email", dado=new_user.email)
+        user_found = SuperService(self.connect).find(campo="email", dado=new_user.email)
 
         if user_found:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already in use")
@@ -124,18 +124,18 @@ class UserService:
 
     def update_user(self, id: int, user_to_update: UserEditSchema):
 
-        user_found = SuperService().find(self.connect, "id", str(id))
+        user_found = SuperService(self.connect).find("id", str(id))
         
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         
         if user_to_update.email:
-            user_found = SuperService().find(self.connect, "email", user_to_update.email)
+            user_found = SuperService(self.connect).find("email", user_to_update.email)
             
             if user_found and user_found[0][0] != id: 
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already in use")
             elif not user_found:
-                user_found = SuperService().find(self.connect, "id", str(id))
+                user_found = SuperService(self.connect).find("id", str(id))
 
 
         user_found = user_found[0]
@@ -177,7 +177,7 @@ class UserService:
     def kill_yourself(self, id: int):
     # def delete_user(self, id: int):
 
-        user_found = SuperService().find(self.connect, "id", str(id))
+        user_found = SuperService(self.connect).find("id", str(id))
 
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
