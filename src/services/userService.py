@@ -1,9 +1,10 @@
 import sqlite3 as sql
 from fastapi import HTTPException, status
+from fastapi.datastructures import QueryParams
 from src import database
 from src.models.userModel import User
 from src.schemas.userSchema import UserReturnSchema, UserSchema, UserEditSchema
-from . import SuperService
+from . import SuperService, pagination, pagination_like
 
 class UserService:
 
@@ -11,16 +12,14 @@ class UserService:
         self.connect = sql.connect("databases/dataBank.db")
         self.cursor = self.connect.cursor()
 
-    def read_all_users(self, page: int=1, rows_per_page: int=10):
+    def read_all_users(self, query_params: QueryParams):
 
-        #Verifying if the bank is empty
+        user_found = SuperService().find(self.connect, table="users")
         
-        user_found = SuperService().find(self.connect)
-
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no users")
         
-        users = SuperService().find(connection=self.connect, page=page, rows_per_page=rows_per_page)
+        users = SuperService().find(connection=self.connect, table="users", page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
 
         found_users: list[UserReturnSchema] = []
 
@@ -33,12 +32,15 @@ class UserService:
                 card_id=user[4]
                 ))
         
+        output = pagination(connection=self.connect, table="users", itens=found_users, page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
+
         self.connect.close()
-        return found_users
+        return output
 
-    def read_user_by_id(self, id: int):
+    def read_user_by_id(self, query_params: QueryParams):
 
-        user_found = SuperService().find(connection=self.connect, campo="id", dado=str(id))
+        id = query_params.get("user_id")
+        user_found = SuperService().find(connection=self.connect, table="users", query=f"WHERE id = '{id}'")
         
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -55,9 +57,9 @@ class UserService:
         self.connect.close()
         return found_users
 
-    def read_user_by_email(self, email: str, page: int=1, rows_per_page: int=10):
+    def read_user_by_email(self, query_params: QueryParams):
 
-        user_found = SuperService().find_like(self.connect, campo="email", dado=email, page=page, rows_per_page=rows_per_page)
+        user_found = SuperService().find_like(self.connect, table="users", column="email", target=str(query_params.get("user_email")), page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
         
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -72,12 +74,14 @@ class UserService:
                 card_id=user[4]
                 ))
 
+        output = pagination(connection=self.connect, table="users", query=f"WHERE email LIKE '%{query_params.get("user_email")}%' ", itens=found_users, page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
+
         self.connect.close()
-        return found_users
+        return output
     
-    def read_user_by_name(self, name: str, page: int=1, rows_per_page: int=10):
+    def read_user_by_name(self, query_params: QueryParams):
 
-        user_found = SuperService().find_like(self.connect, campo="name", dado=name, page=page, rows_per_page=rows_per_page)
+        user_found = SuperService().find_like(self.connect, table="users", column="name", target=str(query_params.get("user_name")), page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
 
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -92,8 +96,10 @@ class UserService:
                 card_id=user[4]
                 ))
         
+        output = pagination(connection=self.connect, table="users", query=f"WHERE name LIKE '%{query_params.get("user_name")}%' ", itens=found_users, page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
+
         self.connect.close()
-        return found_users
+        return output
 
     def add_user(self, new_user : User):
         
@@ -114,6 +120,7 @@ class UserService:
         )
         self.connect.commit()
         self.connect.close()
+        return id
 
     def update_user(self, id: int, user_to_update: UserEditSchema):
 

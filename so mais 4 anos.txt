@@ -1,7 +1,16 @@
 sqlalchemy - sql puro -> ORM
 arquitetura hexagonal (adapter - logica + service - banco, models - tabelas, schemas - corpo dos routers/endpoints, controllers - routers, database - configs do banco)
-
-paginação (rows_per_page + page) - offset pagination
-autenticação com jwt
+ | ok
+paginação (rows_per_page + page) - offset pagination | progress
+autenticação com jwt 
 autorização com pedro
 envio de email para verificar usuario
+
+
+
+1. Refact paginaçao LIKE
+2. refact find LIKE usando o codigo abaixo
+3. refact o resto do processo de paginaçao
+4. dar push
+5. refact superservice com as coisas de user
+

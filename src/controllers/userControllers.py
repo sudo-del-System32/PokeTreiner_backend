@@ -6,22 +6,22 @@ router = APIRouter(prefix="/user")
 
 
 @router.get("/")
-async def read_all_users(page: int=1, rows_per_page: int=10):
+async def read_all_users(request: Request, page: int=1, rows_per_page: int=10):
     # djeizu: dict = await request.json() # await utiliza junto de async function
     # if djeizu.get("email") is None:
-    return UserAdapter().read_all_users_controller(page=page, rows_per_page=rows_per_page)
+    return UserAdapter().read_all_users_controller(request=request)
 
 @router.get("/search/id/{id}")
-async def read_user_by_id(id: int):
-    return UserAdapter().read_user_by_id_controller(id)
+async def read_user_by_id(request: Request, user_id: int):
+    return UserAdapter().read_user_by_id_controller(request=request)
 
 @router.get("/search/email/{email}")
-async def read_user_by_email(email: str, page: int=1, rows_per_page: int=10):
-    return UserAdapter().read_user_by_email_controller(email=email, page=page, rows_per_page=rows_per_page)
+async def read_user_by_email(request: Request, user_email: str, page: int=1, rows_per_page: int=10):
+    return UserAdapter().read_user_by_email_controller(request=request)
 
 @router.get("/search/name/{name}")
-async def read_user_by_name(name: str, page: int=1, rows_per_page: int=10):
-    return UserAdapter().read_user_by_name_controller(name=name, page=page, rows_per_page=rows_per_page)
+async def read_user_by_name(request: Request, user_name: str, page: int=1, rows_per_page: int=10):
+    return UserAdapter().read_user_by_name_controller(request=request)
 
 @router.post("/")
 async def add_user(schema: UserSchema):

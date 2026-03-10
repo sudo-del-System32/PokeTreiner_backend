@@ -1,20 +1,25 @@
+from fastapi import Request
 from src.models.userModel import User
 from src.schemas.userSchema import UserSchema, UserEditSchema
 from src.services.userService import UserService
 
 class UserAdapter:
 
-    def read_all_users_controller(self, page: int=1, rows_per_page: int=10):
-        return UserService().read_all_users(page=page, rows_per_page=rows_per_page)
+    def read_all_users_controller(self, request: Request):
+        users = UserService().read_all_users(request.query_params)
+        return {"erro": False, "data": users}
 
-    def read_user_by_id_controller(self, id: int):
-        return UserService().read_user_by_id(id)
+    def read_user_by_id_controller(self, request: Request):
+        user = UserService().read_user_by_id(request.query_params)
+        return {"erro": False, "data": user}
 
-    def read_user_by_email_controller(self, email: str, page: int=1, rows_per_page: int=10):
-        return UserService().read_user_by_email(email, page=page, rows_per_page=rows_per_page)
+    def read_user_by_email_controller(self, request: Request):
+        users = UserService().read_user_by_email(request.query_params)
+        return {"erro": False, "data": users}
 
-    def read_user_by_name_controller(self, name: str, page: int=1, rows_per_page: int=10):
-        return UserService().read_user_by_name(name, page=page, rows_per_page=rows_per_page)
+    def read_user_by_name_controller(self, request: Request):
+        users = UserService().read_user_by_name(request.query_params)
+        return {"erro": False, "data": users}
 
     def add_user_controller(self, schema: UserSchema):
 
@@ -26,13 +31,15 @@ class UserAdapter:
             card_id=None
         )
 
-        UserService().add_user(new_user=newUser)
-        return {"Mensagem" : "User Added Sucessfull"}
+        new_user_id: int = UserService().add_user(new_user=newUser)
+        return {"erro": False, "message" : "user added sucessfully", "id": str(new_user_id)}
 
     def update_user_controller(self, id: int, user_to_update: UserEditSchema):
-        return UserService().update_user(id, user_to_update)
+        edited_id = UserService().update_user(id, user_to_update)
+        return {"erro": False, "message" : "user edited sucessfully", "id": str(edited_id)}
 
     def kill_yourself_controller(self, id: int):
     # def delete_user_controller(self, id: int):
-        # return UserService().delete_user(id=id)
-        return UserService().kill_yourself(id=id)
+        # UserService().delete_user(id=id)
+        deleted_id = UserService().kill_yourself(id=id)
+        return {"erro": False, "message" : "user deleted sucessfully", "id": str(deleted_id)}
