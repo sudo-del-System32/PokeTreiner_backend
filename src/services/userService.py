@@ -17,7 +17,7 @@ class UserService:
         user_found = SuperService(self.connect).find(table="users")
         
         if not user_found:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no users")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="there are no users")
         
         users = SuperService(self.connect).find( table="users", page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
 
@@ -43,7 +43,7 @@ class UserService:
         user_found = SuperService(self.connect).find(table="users", query=f"WHERE id = '{id}'")
         
         if not user_found:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
 
         user_found = user_found[0]
 
@@ -62,7 +62,7 @@ class UserService:
         user_found = SuperService(self.connect).find_like(table="users", column="email", target=str(query_params.get("user_email")), page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
         
         if not user_found:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
 
         found_users: list[UserReturnSchema] = []
 
@@ -84,7 +84,7 @@ class UserService:
         user_found = SuperService(self.connect).find_like(table="users", column="name", target=str(query_params.get("user_name")), page=int(query_params.get("page")), rows_per_page=int(query_params.get("rows_per_page")))
 
         if not user_found:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
 
         found_users: list[UserReturnSchema] = []
 
@@ -105,7 +105,7 @@ class UserService:
         
         user_found = SuperService(self.connect).find(table="users", query=f"WHERE email = '{new_user.get("email")}'")
         if user_found:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already in use")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="email is already in use")
 
         SuperService(self.connect).add(table="users", item_to_add=new_user)
 
@@ -120,13 +120,13 @@ class UserService:
 
         user_found = SuperService(self.connect).find(table="users", query=f"WHERE id = '{id}'")
         if not user_found:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
         
         if user_to_update.get("email"):
             user_found = SuperService(self.connect).find(table="users", query=f"WHERE email = '{user_to_update.get("email")}'")
             
             if user_found and user_found[0][0] != id: 
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already in use")
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="email is already in use")
 
         SuperService(self.connect).edit(table="users", item_to_update=user_to_update, query=f"WHERE id = '{id}'; ")
 
@@ -136,19 +136,15 @@ class UserService:
     def kill_yourself(self, id: int):
     # def delete_user(self, id: int):
 
-        user_found = SuperService(self.connect).find("id", str(id))
-
+        user_found = SuperService(self.connect).find(table="users", query=f"WHERE id = '{id}'")
         if not user_found:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
 
-        self.cursor.execute("""
-            DELETE 
-            FROM users
-            WHERE id = '?'    
-            """,
-            (id, )
-        )
-        self.connect.commit()
-        self.connect.close()
+        SuperService(self.connect).delete(table="users", query=f"WHERE id = '{id}'")
         
-        return {"mensagem": f"User with id {id} was deleted"}
+        user_found = SuperService(self.connect).find(table="users", query=f"WHERE id = '{id}'")
+        if user_found:
+            raise HTTPException(status_code=status.WS_1013_TRY_AGAIN_LATER, detail="user was not deleted correctly")
+
+        self.connect.close()
+        return id

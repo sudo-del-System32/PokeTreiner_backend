@@ -224,3 +224,23 @@ class SuperService():
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
         return True
+    
+    def delete(self,
+            table: str,
+            query: str,
+        ):
+
+        try:
+            self.cursor.execute(f"""
+                DELETE 
+                FROM {table}
+                {query}    
+                """
+            )
+
+            self.connection.commit()
+
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+        return True
