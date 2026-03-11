@@ -32,14 +32,14 @@ class UserAdapter:
         )
 
         new_user_id: int = UserService().add_user(new_user=newUser.model_dump())
-        return {"erro": False, "message" : "user added sucessfully", "id": str(new_user_id)}
+        return {"erro": False, "message" : "user added sucessfully", "id": new_user_id}
 
     def update_user_controller(self, id: int, user_to_update: UserEditSchema):
-        edited_id = UserService().update_user(id, user_to_update)
-        return {"erro": False, "message" : "user edited sucessfully", "id": str(edited_id)}
+        edited_id = UserService().update_user(id, user_to_update.model_dump())
+        return {"erro": False, "message" : "user edited sucessfully", "id": edited_id}
 
     def kill_yourself_controller(self, id: int):
     # def delete_user_controller(self, id: int):
         # UserService().delete_user(id=id)
         deleted_id = UserService().kill_yourself(id=id)
-        return {"erro": False, "message" : "user deleted sucessfully", "id": str(deleted_id)}
+        return {"erro": False, "message" : "user deleted sucessfully", "id": deleted_id}

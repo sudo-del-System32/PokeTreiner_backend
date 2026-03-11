@@ -103,76 +103,35 @@ class UserService:
 
     def add_user(self, new_user: dict[str, any]):
         
-        user_found = SuperService(self.connect).find(campo="email", dado=new_user.email)
-
+        user_found = SuperService(self.connect).find(table="users", query=f"WHERE email = '{new_user.get("email")}'")
         if user_found:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already in use")
 
-        data = tuple(new_user.__dict__.values())
+        SuperService(self.connect).add(table="users", item_to_add=new_user)
+
+        user = SuperService(self.connect).find(table="users", query=f"WHERE email = '{new_user.get("email")}'")
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="new user was not found in bank")
         
-        self.cursor.execute("""
-                INSERT INTO users
-                (id, name, email, password, card_id)
-                VALUES
-                (?, ?, ?, ?, ?)
-            """,
-            (data)
-        )
-        self.connect.commit()
         self.connect.close()
-        return id
+        return user[0][0]
 
-    def update_user(self, id: int, user_to_update: UserEditSchema):
+    def update_user(self, id: int, user_to_update: dict[str, any]):
 
-        user_found = SuperService(self.connect).find("id", str(id))
-        
+        user_found = SuperService(self.connect).find(table="users", query=f"WHERE id = '{id}'")
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         
-        if user_to_update.email:
-            user_found = SuperService(self.connect).find("email", user_to_update.email)
+        if user_to_update.get("email"):
+            user_found = SuperService(self.connect).find(table="users", query=f"WHERE email = '{user_to_update.get("email")}'")
             
             if user_found and user_found[0][0] != id: 
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already in use")
-            elif not user_found:
-                user_found = SuperService(self.connect).find("id", str(id))
 
+        SuperService(self.connect).edit(table="users", item_to_update=user_to_update, query=f"WHERE id = '{id}'; ")
 
-        user_found = user_found[0]
-        user_found = User(
-            id=user_found[0],
-            name=user_found[1],
-            email=user_found[2],
-            password=user_found[3],
-            card_id=user_found[4]
-            )
-
-        # Casos de alteraçao de uma unica informaçao do banco
-        if not user_to_update.name:
-            user_to_update.name = user_found.name
-        if not user_to_update.email:
-            user_to_update.email = user_found.email
-        if not user_to_update.password:
-            user_to_update.password = user_found.password
-
-        dados = tuple(user_to_update.__dict__.values())
-
-        self.cursor.execute(f"""
-            UPDATE users
-            SET 
-            name = ?,
-            email = ?, 
-            password = ?
-                            
-            WHERE id = ?
-            """,
-            dados.__add__((id, ))
-        )
-        self.connect.commit()
         self.connect.close()
-
-        return {"mensagem": f"User with id {id} was edit"}
-
+        return id
 
     def kill_yourself(self, id: int):
     # def delete_user(self, id: int):

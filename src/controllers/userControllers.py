@@ -29,7 +29,7 @@ async def add_user(schema: UserSchema):
 
 @router.put("/")
 async def update_user(id: int, user_to_update: UserEditSchema):
-    return UserAdapter().update_user_controller(id=id, user_to_update=user_to_update)
+    return UserAdapter().update_user_controller(id, user_to_update)
 
 
 @router.delete("/")

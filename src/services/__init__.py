@@ -117,20 +117,31 @@ class SuperService():
             item_to_add: dict[str, any]
         ):
 
-        self.cursor.execute(f"""
-                INSERT INTO users
-                ({item_to_add.keys})
-                VALUES
-                ({item_to_add.items})
-            """
-        )
-        self.connect.commit()
+        key_placement: str = " "
+        value_placement: str = " "
+        for item in item_to_add.keys():
+            key_placement = key_placement + str(item) + "," 
+            value_placement = value_placement + "?" + ","
+
+        # WHAT AM I DOING
+        key_placement = key_placement[:-1]
+        value_placement = value_placement[:-1]
         
-        user = self.find(table=table, query=f"WHERE email = '{item_to_add.get("email")}'")
-        if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="new user was not found in bank")
-        
-        return user[0][0]
+        try:
+            self.cursor.execute(f"""
+                    INSERT INTO users
+                    ({key_placement})
+                    VALUES
+                    ({value_placement})
+                """,
+                tuple(item_to_add.values())
+            )
+            self.connection.commit()
+            
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+        return True
 
     def find(self, 
             table: str, 
@@ -151,10 +162,10 @@ class SuperService():
                 (rows_per_page, rows_per_page*(page-1))
             )
     
-            return cursor.fetchall()
-
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+        return cursor.fetchall()
 
     def find_like(self, 
             table: str, 
@@ -180,8 +191,36 @@ class SuperService():
                 (rows_per_page, rows_per_page*(page-1))
             )
     
-            return cursor.fetchall()
-        
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        
+        return cursor.fetchall()
     
+    def edit(self,
+            table: str,
+            query: str,
+            item_to_update: dict[str, any]
+        ):
+        
+        update_query: str = " "
+        for item in item_to_update.items():
+            if item[1]:
+                update_query += item[0] + " = " + "\'" + str(item[1]) + "\'" + ","
+
+        update_query = update_query[:-1]
+
+        try:
+            self.cursor.execute(f"""
+                UPDATE {table}
+                SET 
+                {update_query}
+                {query}
+            """ 
+            )
+    
+            self.connection.commit()
+
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+        return True
