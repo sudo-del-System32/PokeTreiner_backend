@@ -208,10 +208,12 @@ class SuperService():
             item_to_update: dict[str, Any]
         ):
         
-        update_query: str = " "
+        update_query: str = " " # TURN MORE LIKE ADD
+        values: list = []
         for item in item_to_update.items():
             if item[1]:
-                update_query += item[0] + " = " + "\'" + str(item[1]) + "\'" + ","
+                update_query += item[0] + " = " + "?" + ","
+                values.append(str(item[1]))
 
         update_query = update_query[:-1]
 
@@ -221,7 +223,8 @@ class SuperService():
                 SET 
                 {update_query}
                 {query}
-            """ 
+                """,
+                tuple(values)
             )
     
             self.connection.commit()
