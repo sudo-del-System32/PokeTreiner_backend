@@ -77,7 +77,7 @@ class UserService:
         self.connect.close()
         return output
     
-    def read_user_by_email(self, path_params: dict[str, Any], query_params: QueryParams):
+    def read_user_by_email(self, query_params: QueryParams):
 
         user_found = SuperService(self.connect).find(column_query="id, name, email, password", table="users", collumns=["email"], data=[query_params.get("email"),])
         
