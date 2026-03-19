@@ -25,7 +25,7 @@ class AuthAdapter:
         
         user = {
             "id": user[0][0],
-            "password": user[0][1]
+            "password": user[0][1] # type: ignore
         }
 
         if request.query_params.get("password") != user.get("password"): 
