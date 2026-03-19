@@ -1,7 +1,9 @@
-from fastapi import Request
+from fastapi import HTTPException, Request, status
 from src.models.userModel import User
 from src.schemas.userSchema import UserSchema, UserEditSchema
 from src.services.userService import UserService
+from src.controllers import user_dependency
+
 
 class UserAdapter:
 
@@ -34,12 +36,25 @@ class UserAdapter:
         new_user_id: int = UserService().add_user(new_user=newUser.model_dump(exclude_unset=True))
         return {"error": False, "message" : "user added sucessfully", "id": new_user_id}
 
-    def update_user_controller(self, id: int, user_to_update: UserEditSchema):
+    def update_user_controller(self, user: user_dependency, id: int, user_to_update: UserEditSchema):
+        
+        if user.get("id") != id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="user can't do this action for another user"
+            )
+
         edited_id = UserService().update_user(id, user_to_update.model_dump(exclude_unset=True))
         return {"error": False, "message" : "user edited sucessfully", "id": edited_id}
 
-    def kill_yourself_controller(self, id: int):
+    def kill_yourself_controller(self, user: user_dependency, id: int):
     # def delete_user_controller(self, id: int):
-        # UserService().delete_user(id=id)
-        deleted_id = UserService().kill_yourself(id=id)
+        
+        if user.get("id") != id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="user can't do this action for another user"
+            )
+
+        deleted_id = UserService().kill_yourself(id=id) # UserService().delete_user(id=id)
         return {"error": False, "message" : "user deleted sucessfully", "id": deleted_id}
