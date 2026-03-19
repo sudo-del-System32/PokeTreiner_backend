@@ -14,7 +14,7 @@ class UserAdapter:
         return {"error": False, "data": user}
 
     def read_user_by_email_controller(self, request: Request):
-        users = UserService().read_user_by_email(request.path_params, request.query_params)
+        users = UserService().read_user_by_email_likewise(request.path_params, request.query_params)
         return {"error": False, "data": users}
 
     def read_user_by_name_controller(self, request: Request):
@@ -31,11 +31,11 @@ class UserAdapter:
             card_id=None
         )
 
-        new_user_id: int = UserService().add_user(new_user=newUser.model_dump())
+        new_user_id: int = UserService().add_user(new_user=newUser.model_dump(exclude_unset=True))
         return {"error": False, "message" : "user added sucessfully", "id": new_user_id}
 
     def update_user_controller(self, id: int, user_to_update: UserEditSchema):
-        edited_id = UserService().update_user(id, user_to_update.model_dump())
+        edited_id = UserService().update_user(id, user_to_update.model_dump(exclude_unset=True))
         return {"error": False, "message" : "user edited sucessfully", "id": edited_id}
 
     def kill_yourself_controller(self, id: int):

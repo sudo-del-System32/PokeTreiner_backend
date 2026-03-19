@@ -9,9 +9,6 @@ filtro no all
 
 
 
-1. Refact paginaçao LIKE | ok
-2. refact find LIKE usando o codigo abaixo | ok
-3. refact o resto do processo de paginaçao | ok
-4. dar push | ok
-5. refact superservice com as coisas de user | ok
-
+1. Refact paginaçao + find |
+2. jwt |
+3. REFATORAR TODAS AS INTERAÇOES COM O BANCO PRA RETORNAR UM DICIONARIO AO INVES DE UMA PORCARIA DE TUPLA |
