@@ -29,7 +29,7 @@ class AuthAdapter:
 
         code_jwt = create_tolkien(
             user_id=user.id,  # type: ignore
-            expire_time=timedelta(microseconds=ACCESS_TOKEN_EXPIRE_MINUTES), 
+            expire_time=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES), 
             SECRET=SECRET_KEY
         ) 
         return {

@@ -27,7 +27,7 @@ def me(request: Request, tolkien: str):
     try:
         payload = jwt.decode(token=tolkien, key=SECRET_KEY, algorithms=ALGORITHM_TO_HASH)
         
-        user_id = payload.get("sub")
+        user_id = payload.get("id")
 
         if not user_id:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user is not authorized to do this action")
