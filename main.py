@@ -1,6 +1,7 @@
 import os, uvicorn
 from fastapi import FastAPI
-from src.controllers import userControllers, cardControllers
+from src.controllers import userControllers, cardControllers, authControllers
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title= "Api card social midia test")
 
@@ -8,9 +9,22 @@ app = FastAPI(title= "Api card social midia test")
 async def root():
     return {'mensagem' : 'API TEST OK'}
 
+origins = [
+    "http://localhost",
+    "http://localhost:4200",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ---- ROUTERS ---- 
 app.include_router(userControllers.router)
+app.include_router(authControllers.router)
 app.include_router(cardControllers.router)
 
 

@@ -147,10 +147,25 @@ class SuperService():
     def find(self, 
             column_query: str,
             table: str, 
-            query: str = "WHERE TRUE", 
+            collumns: list[str] = [], 
+            data: list = [],
             page: int = 1,
             rows_per_page: int = 1
         ) -> list[tuple[Any]]:
+
+        query: str = "WHERE TRUE OR ?"
+        query_2 = ("TRUE", )
+        
+        if collumns and data :
+            query = "WHERE "
+            query_2 = tuple(data)
+
+            for col in collumns:
+                query = query +  col + " = " + "?" + ","
+
+            query = query[:-1]
+
+        query_2 = query_2 + (rows_per_page, rows_per_page*(page-1))
 
         try:
 
@@ -161,7 +176,7 @@ class SuperService():
                     LIMIT ?
                     OFFSET ?
                 """,
-                (rows_per_page, rows_per_page*(page-1))
+                query_2 
             )
     
         except Exception as e:
