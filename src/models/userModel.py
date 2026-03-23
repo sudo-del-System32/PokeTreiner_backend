@@ -1,6 +1,6 @@
 from pydantic import BaseModel, model_validator
 from typing import Optional
-
+from src import email_validator
 
 class User(BaseModel):
     id: Optional[int]
@@ -17,6 +17,9 @@ class User(BaseModel):
     
     @model_validator(mode="after")
     def check_email(self):
+        if not email_validator(self.email):
+            raise ValueError("invalid email")
+
         if len(self.email) < 1:
             raise ValueError("User email can not be empty")
         return self
@@ -24,6 +27,6 @@ class User(BaseModel):
     @model_validator(mode="after")
     def check_password(self):
         if len(self.password) < 4:
-            raise ValueError("User password needs to be bigger than 4 digis")
+            raise ValueError("User password needs to be bigger than 4 digits")
         return self
 

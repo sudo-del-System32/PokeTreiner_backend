@@ -1,7 +1,7 @@
 from fastapi import Request
 
 from fastapi import Request, HTTPException, status, Depends
-from src import SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES
+from src import SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES, email_validator
 from datetime import timedelta
 from src.services.userService import UserService
 from src.services import SuperService 
@@ -14,6 +14,9 @@ class AuthAdapter:
 
     def login(self, data: form_auth_dependency):
         
+        if not email_validator(data.username):
+            raise ValueError("invalid email.")
+
         user = SuperService(UserService().connect).find(column_query="id, password", table="users", collumns=["email"], data=[data.username,])
         
         if not user:
