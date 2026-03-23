@@ -3,7 +3,7 @@ from src.schemas.userSchema import UserSchema, UserEditSchema
 from src.adapters.userAdapter import UserAdapter
 from src.controllers import user_dependency
 
-router = APIRouter(prefix="/user") 
+router = APIRouter(prefix="/user", tags=["user"]) 
 
 
 @router.get("/all")

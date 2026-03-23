@@ -1,6 +1,6 @@
 from fastapi import Request
 
-from fastapi import Request, HTTPException, status
+from fastapi import Request, HTTPException, status, Depends
 from src import SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES
 from datetime import timedelta
 from src.services.userService import UserService
@@ -8,14 +8,13 @@ from src.services import SuperService
 from src.models.userModel import User  
 from src.services.authService import create_tolkien 
 
-
-
+from src.controllers import form_auth_dependency
 
 class AuthAdapter:
 
-    def login(self, request: Request):
+    def login(self, data: form_auth_dependency):
         
-        user = SuperService(UserService().connect).find(column_query="id, password", table="users", collumns=["email"], data=[request.query_params.get("email"),])
+        user = SuperService(UserService().connect).find(column_query="id, password", table="users", collumns=["email"], data=[data.username,])
         
         if not user:
             raise HTTPException(
@@ -28,7 +27,7 @@ class AuthAdapter:
             "password": user[0][1] # type: ignore
         }
 
-        if request.query_params.get("password") != user.get("password"): 
+        if data.password != user.get("password"): 
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="email or password is incorrect"
@@ -40,6 +39,6 @@ class AuthAdapter:
             SECRET=SECRET_KEY
         ) 
         return {
-            "access _token": code_jwt,
-            "token_type": "Bearer"
+            "access_token": code_jwt,
+            "token_type": "bearer"
             }
