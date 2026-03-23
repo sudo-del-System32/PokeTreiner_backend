@@ -1,6 +1,6 @@
 from pydantic import BaseModel, model_validator
 from typing import Optional
-
+from src import email_validator
 
 class UserSchema(BaseModel):
     name: str
@@ -15,6 +15,9 @@ class UserSchema(BaseModel):
     
     @model_validator(mode="after")
     def check_email(self):
+        if not email_validator(self.email):
+            raise ValueError("invalid email")
+
         if len(self.email) < 1:
             raise ValueError("User email can not be empty")
         return self
@@ -43,7 +46,10 @@ class UserEditSchema(BaseModel):
     def check_email(self):
         if not self.email:
             return self
-
+        
+        if not email_validator(self.email):
+            raise ValueError("invalid email")
+        
         if len(self.email) < 1:
             raise ValueError("User email can not be empty")
         return self
