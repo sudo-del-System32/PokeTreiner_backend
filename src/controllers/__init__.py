@@ -1,12 +1,21 @@
 from jose import jwt, ExpiredSignatureError, JOSEError, JWTError
 from typing import Any, Annotated
 from fastapi import HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from src import SECRET_KEY, ALGORITHM_TO_HASH
 from src.services.userService import UserService
 
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from typing import Annotated
 
-def get_current_user(token: str):
+
+form_auth_dependency = Annotated[OAuth2PasswordRequestForm, Depends()]
+
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+token_dependency = Annotated[str, Depends(oauth2_scheme)]
+
+def get_current_user(token: token_dependency):
     
     try:
         payload = jwt.decode(token=token, key=SECRET_KEY, algorithms=ALGORITHM_TO_HASH)
