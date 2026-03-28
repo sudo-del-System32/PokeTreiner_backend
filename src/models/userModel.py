@@ -13,6 +13,9 @@ class User(BaseModel):
     def check_name(self):
         if len(self.name) < 1:
             raise ValueError("User name can not be empty")
+        
+        if len(self.name) >= 25:
+            raise ValueError("User name needs to be at max 25 digits")
         return self
     
     @model_validator(mode="after")
@@ -22,11 +25,18 @@ class User(BaseModel):
 
         if len(self.email) < 1:
             raise ValueError("User email can not be empty")
+        
+        if len(self.email) >= 320:
+            raise ValueError("User email needs to be at max 320 digits")
+
         return self
     
     @model_validator(mode="after")
     def check_password(self):
         if len(self.password) < 4:
             raise ValueError("User password needs to be bigger than 4 digits")
+        
+        if len(self.password) >= 25:
+            raise ValueError("User password needs to be at max 25 digits")
         return self
 
