@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, HTTPException, status, Depends
+from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse
 from src.controllers import user_dependency
 from src.adapters.authAdapter import AuthAdapter, form_auth_dependency
@@ -6,7 +6,6 @@ from src.adapters.authAdapter import AuthAdapter, form_auth_dependency
 
 router = APIRouter(prefix="/auth", tags=["auth"]) 
 
-from jose import jwt
 
 @router.post("/login")
 async def login(data: form_auth_dependency):

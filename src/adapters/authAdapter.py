@@ -1,16 +1,14 @@
-from fastapi import Request
 
-from fastapi import Request, HTTPException, status, Depends
+from fastapi import HTTPException, status, Depends
 from src import SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES, email_validator, REFRESH_TOKEN_SECRET_KEY, REFRESH_TOKEN_EXPIRE_DAYS, ALGORITHM_TO_HASH
 from datetime import timedelta
 from src.services.userService import UserService
 from src.services import SuperService 
-from src.models.userModel import User  
 from src.services.authService import create_tolkien 
 
 from src.controllers import form_auth_dependency
 
-from jose import jwt, ExpiredSignatureError, JOSEError, JWTError
+from jose import jwt, ExpiredSignatureError, JWTError
 
 class AuthAdapter:
 

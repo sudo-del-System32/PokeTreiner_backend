@@ -1,4 +1,4 @@
-from jose import jwt, ExpiredSignatureError, JOSEError, JWTError
+from jose import jwt, ExpiredSignatureError, JWTError
 from typing import Any, Annotated
 from fastapi import HTTPException, status, Depends
 from src import SECRET_KEY, ALGORITHM_TO_HASH
