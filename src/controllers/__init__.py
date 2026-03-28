@@ -18,7 +18,12 @@ token_dependency = Annotated[str, Depends(oauth2_scheme)]
 def get_current_user(token: token_dependency):
     
     try:
-        payload = jwt.decode(token=token, key=SECRET_KEY, algorithms=ALGORITHM_TO_HASH)
+        payload = jwt.decode(
+            token=token, 
+            key=SECRET_KEY, 
+            algorithms=ALGORITHM_TO_HASH
+        )
+        
         user_id = payload.get("id")
 
         if not user_id:
