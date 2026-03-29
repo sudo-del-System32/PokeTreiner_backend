@@ -28,7 +28,7 @@ class UserAdapter:
         newUser = User(
             id=None, 
             name=schema.name, 
-            email=schema.email, 
+            email=schema.email.lower(), 
             password=schema.password, 
             card_id=None
         )
@@ -43,6 +43,9 @@ class UserAdapter:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="user can't do this action for another user"
             )
+
+        if user_to_update.email:
+            user_to_update.email = user_to_update.email.lower()
 
         edited_id = UserService().update_user(id, user_to_update.model_dump(exclude_unset=True))
         return {"error": False, "message" : "user edited sucessfully", "id": edited_id}

@@ -21,7 +21,7 @@ class AuthAdapter:
             column_query="id, password",
             table="users", 
             collumns=["email"], 
-            data=[data.username,]
+            data=[data.username.lower(),]
             )
         
         if not user:
