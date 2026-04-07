@@ -1,4 +1,4 @@
-# Backend_login
+# PokeTreiner_backend
 
 *Using uvicorn use the command: python3 main.py
 

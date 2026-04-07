@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request
-from src.schemas.userSchema import UserSchema, UserEditSchema
+from src.schemas.userSchema import UserAddSchema, UserEditSchema
 from src.adapters.userAdapter import UserAdapter
 from src.controllers import user_dependency
 
@@ -25,7 +25,7 @@ async def read_user_by_name(user: user_dependency, request: Request, user_name: 
     return UserAdapter().read_user_by_name_controller(request=request)
 
 @router.post("/register")
-async def add_user(schema: UserSchema):
+async def add_user(schema: UserAddSchema):
     return UserAdapter().add_user_controller(schema)
 
 @router.put("/edit/{id}")

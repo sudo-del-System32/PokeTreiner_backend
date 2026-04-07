@@ -1,90 +1,36 @@
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, Field
 from typing import Optional
-from src import email_validator
+from src import Email
 
-class UserSchema(BaseModel):
-    name: str
-    email: str
-    password: str
+class UserAddSchema(BaseModel):
+    name: str = Field(min_length=1, max_length=25)
+    email: Email = Field(min_length=1, max_length=320)
+    password: str = Field(min_length=4, max_length=25)
 
-    @model_validator(mode="after")
-    def check_name(self):
-        if len(self.name) < 1:
-            raise ValueError("User name can not be empty")
-        
-        if len(self.name) >= 25:
-            raise ValueError("User name needs to be at max 25 digits")
+    # @model_validator(mode="after")
+    # def check_email(self):
+    #     if not email_validator(self.email):
+    #         raise ValueError("invalid email")
 
-        return self
-    
-    @model_validator(mode="after")
-    def check_email(self):
-        if not email_validator(self.email):
-            raise ValueError("invalid email")
-
-        if len(self.email) < 1:
-            raise ValueError("User email can not be empty")
-        
-        if len(self.email) >= 320:
-            raise ValueError("User email needs to be at max 320 digits")
-
-        return self
-    
-    @model_validator(mode="after")
-    def check_password(self):
-        if len(self.password) < 4:
-            raise ValueError("User password needs to be bigger than 4 digits")
-        if len(self.password) >= 25:
-            raise ValueError("User password needs to be at max 25 digits")
-        return self
+    #     return self
 
 class UserEditSchema(BaseModel):
-    name: Optional[str] = None
-    email: Optional[str] = None
-    password: Optional[str] = None
+    name: Optional[str] = Field(min_length=1, max_length=25, default=None)
+    email: Optional[Email] = Field(min_length=1, max_length=320, default=None)
+    password: Optional[str] = Field(min_length=1, max_length=25, default=None)
 
-    @model_validator(mode="after")
-    def check_name(self):
-        if not self.name:
-            return self
+    # @model_validator(mode="after")
+    # def check_email(self):
+    #     if self.email is None:
+    #         return self
         
-        if len(self.name) < 1:
-            raise ValueError("User name can not be empty")
+    #     if not email_validator(self.email):
+    #         raise ValueError("invalid email")
         
-        if len(self.name) >= 25:
-            raise ValueError("User name needs to be at max 25 digits")
-
-        return self
+    #     return self
     
-    @model_validator(mode="after")
-    def check_email(self):
-        if not self.email:
-            return self
-        
-        if not email_validator(self.email):
-            raise ValueError("invalid email")
-        
-        if len(self.email) < 1:
-            raise ValueError("User email can not be empty")
-        
-        if len(self.email) >= 320:
-            raise ValueError("User email needs to be at max 320 digits")
 
-        return self
-    
-    @model_validator(mode="after")
-    def check_password(self):
-        if not self.password:
-            return self
-
-        if len(self.password) < 4:
-            raise ValueError("User password needs to be bigger than 4 digits")
-        
-        if len(self.password) >= 25:
-            raise ValueError("User password needs to be at max 25 digits")
-        return self
-
-# Ajeitar dps
+# Excluir dps
 class UserReturnSchema(BaseModel):
     id: int
     name: str

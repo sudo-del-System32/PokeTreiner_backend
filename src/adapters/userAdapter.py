@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Request, status
 from src.models.userModel import User
-from src.schemas.userSchema import UserSchema, UserEditSchema
+from src.schemas.userSchema import UserAddSchema, UserEditSchema
 from src.services.userService import UserService
 from src.controllers import user_dependency
 
@@ -23,12 +23,12 @@ class UserAdapter:
         users = UserService().read_user_by_name(request.path_params, request.query_params)
         return {"error": False, "data": users}
 
-    def add_user_controller(self, schema: UserSchema):
+    def add_user_controller(self, schema: UserAddSchema):
 
         newUser = User(
             id=None, 
             name=schema.name, 
-            email=schema.email.lower(), 
+            email=schema.email, 
             password=schema.password, 
             card_id=None
         )
