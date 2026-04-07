@@ -2,9 +2,8 @@ import sqlite3 as sql
 from typing import Any
 from fastapi import HTTPException, status
 from fastapi.datastructures import QueryParams
-from src import database
 from src.models.userModel import User
-from src.schemas.userSchema import UserReturnSchema, UserSchema, UserEditSchema
+from src.schemas.userSchema import UserReturnSchema, UserAddSchema, UserEditSchema
 from . import SuperService, pagination, pagination_like
 
 class UserService:
