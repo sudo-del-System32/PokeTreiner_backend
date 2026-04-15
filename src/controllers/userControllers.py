@@ -8,8 +8,6 @@ router = APIRouter(prefix="/user", tags=["user"])
 
 @router.get("/all")
 async def read_all_users(curr_user: user_dependency, request: Request, page: int=1, rows_per_page: int=10):
-    # djeizu: dict = await request.json() # await utiliza junto de async function
-    # if djeizu.get("email") is None:
     return UserAdapter().read_all_users_controller(request=request)
 
 @router.get("/search/{user_id}")
@@ -35,6 +33,4 @@ async def update_user(user: user_dependency, id: int, user_to_update: UserEditSc
 
 @router.delete("/delete/{id}")
 async def kill_yourself(user: user_dependency, id: int):
-# async def delete_user(id: int):
-    # return UserAdapter().delete_user_controller(id=id)
     return UserAdapter().kill_yourself_controller(user, id=id)

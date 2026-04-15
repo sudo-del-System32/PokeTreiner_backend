@@ -26,11 +26,9 @@ class UserAdapter:
     def add_user_controller(self, schema: UserAddSchema):
 
         newUser = User(
-            id=None, 
             name=schema.name, 
             email=schema.email, 
             password=schema.password, 
-            card_id=None
         )
 
         new_user_id: int = UserService().add_user(new_user=newUser.model_dump(exclude_unset=True))
@@ -44,14 +42,10 @@ class UserAdapter:
                 detail="user can't do this action for another user"
             )
 
-        if user_to_update.email:
-            user_to_update.email = user_to_update.email.lower()
-
         edited_id = UserService().update_user(id, user_to_update.model_dump(exclude_unset=True))
         return {"error": False, "message" : "user edited sucessfully", "id": edited_id}
 
     def kill_yourself_controller(self, user: user_dependency, id: int):
-    # def delete_user_controller(self, id: int):
         
         if user.get("id") != id:
             raise HTTPException(
@@ -59,5 +53,5 @@ class UserAdapter:
                 detail="user can't do this action for another user"
             )
 
-        deleted_id = UserService().kill_yourself(id=id) # UserService().delete_user(id=id)
+        deleted_id = UserService().kill_yourself(id=id) 
         return {"error": False, "message" : "user deleted sucessfully", "id": deleted_id}
