@@ -1,42 +1,33 @@
-from pydantic import BaseModel, model_validator
 from typing import Optional
-from src import email_validator
+from src.models import Model
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
-class User(BaseModel):
-    id: Optional[int]
-    name: str
-    email: str
-    password: str
-    card_id: Optional[int]
+class User(Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(25), nullable=False)
+    email: Mapped[str] = mapped_column(String(320), nullable=False, unique=True)
+    password: Mapped[str] = mapped_column(String(25), nullable=False)
     
-    @model_validator(mode="after")
-    def check_name(self):
-        if len(self.name) < 1:
-            raise ValueError("User name can not be empty")
-        
-        if len(self.name) >= 25:
-            raise ValueError("User name needs to be at max 25 digits")
-        return self
-    
-    @model_validator(mode="after")
-    def check_email(self):
-        if not email_validator(self.email):
-            raise ValueError("invalid email")
+    def __init__(
+        self, 
+        name: str,
+        email: str,
+        password: str
+        ):
+        self.name = name
+        self.email = email
+        self.password = password
 
-        if len(self.email) < 1:
-            raise ValueError("User email can not be empty")
-        
-        if len(self.email) >= 320:
-            raise ValueError("User email needs to be at max 320 digits")
+    # Same as __dict__ but manually made
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "password": self.password,
+        }
 
-        return self
-    
-    @model_validator(mode="after")
-    def check_password(self):
-        if len(self.password) < 4:
-            raise ValueError("User password needs to be bigger than 4 digits")
-        
-        if len(self.password) >= 25:
-            raise ValueError("User password needs to be at max 25 digits")
-        return self
-
+    # Representation: how its printed when printed 
+    def __repr__(self) -> str:
+        return f"<User {self.id}, {self.name}, {self.email}, {self.password}>"

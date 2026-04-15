@@ -3,8 +3,8 @@ from typing import Any
 from fastapi import HTTPException, status
 from fastapi.datastructures import QueryParams
 from src.models.userModel import User
-from src.schemas.userSchema import UserReturnSchema, UserAddSchema, UserEditSchema
-from . import SuperService, pagination, pagination_like
+from src.schemas.userSchema import UserReturnSchema
+from . import SuperService, pagination
 
 class UserService:
 
@@ -14,17 +14,16 @@ class UserService:
 
     def read_all_users(self, query_params: QueryParams):
 
-        users = SuperService(self.connect).find(column_query="id, name, email, card_id", table="users", page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
+        users = SuperService(self.connect).find(column_query="id, name, email", table="users", page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
 
         found_users: list[UserReturnSchema] = []
 
         for user in users: 
-            id, name, email, card_id = user
+            id, name, email = user
             found_users.append(UserReturnSchema(
                 id=id,
                 name=name,
                 email=email,
-                card_id=card_id
                 ))
         
         output = pagination(connection=self.connect, table="users", itens=found_users, page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
@@ -35,19 +34,18 @@ class UserService:
     def read_user_by_id(self, path_params: dict[str, Any]):
 
         id = path_params.get('user_id')
-        user_found = SuperService(self.connect).find(column_query="id, name, email, card_id", table="users", collumns=["id"], data=[id,])
+        user_found = SuperService(self.connect).find(column_query="id, name, email", table="users", collumns=["id"], data=[id,])
         
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
 
         user_found = user_found[0]
             
-        id, name, email, card_id = user_found
+        id, name, email = user_found
         found_users = UserReturnSchema(
             id=id,
             name=name,
             email=email,
-            card_id=card_id
         )
 
         self.connect.close()
@@ -55,7 +53,7 @@ class UserService:
 
     def read_user_by_email_likewise(self, path_params: dict[str, Any], query_params: QueryParams):
 
-        user_found = SuperService(self.connect).find_like(column_query="id, name, email, card_id", table="users", column="email", target=str(path_params.get("user_email")), page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
+        user_found = SuperService(self.connect).find_like(column_query="id, name, email", table="users", column="email", target=str(path_params.get("user_email")), page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
         
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
@@ -68,7 +66,6 @@ class UserService:
                 id=id,
                 name=name,
                 email=email,
-                card_id=card_id
             ))
 
         output = pagination(connection=self.connect, table="users", query=f"WHERE email LIKE '%{path_params.get("user_email")}%' ", itens=found_users, page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
@@ -91,7 +88,6 @@ class UserService:
             name=name,
             email=email,
             password=password,
-            card_id=None
         )
 
         self.connect.close()
@@ -100,7 +96,7 @@ class UserService:
     
     def read_user_by_name(self, path_params: dict[str, Any], query_params: QueryParams):
 
-        user_found = SuperService(self.connect).find_like(column_query="id, name, email, card_id", table="users", column="name", target=str(path_params.get("user_name")), page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
+        user_found = SuperService(self.connect).find_like(column_query="id, name, email", table="users", column="name", target=str(path_params.get("user_name")), page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
 
         if not user_found:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
@@ -108,12 +104,11 @@ class UserService:
         found_users: list[UserReturnSchema] = []
 
         for user in user_found:
-            id, name, email, card_id = user
+            id, name, email = user
             found_users.append(UserReturnSchema(
                 id=id,
                 name=name,
                 email=email,
-                card_id=card_id
             ))
         
         output = pagination(connection=self.connect, table="users", query=f"WHERE name LIKE '%{path_params.get("user_name")}%' ", itens=found_users, page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
@@ -154,7 +149,6 @@ class UserService:
         return id
 
     def kill_yourself(self, id: int):
-    # def delete_user(self, id: int):
 
         user_found = SuperService(self.connect).find(column_query="id", table="users", collumns=["id"], data=[id,])
         if not user_found:

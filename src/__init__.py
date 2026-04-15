@@ -5,8 +5,8 @@ from re import match
 
 
 def email_validator(email: str):
-    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    if not match(email_pattern, email):
+    EMAIL_PATTERN = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not match(EMAIL_PATTERN, email):
         raise ValueError(
             "Invalid email format."
         )
