@@ -1,164 +1,148 @@
-import sqlite3 as sql
 from typing import Any
 from fastapi import HTTPException, status
 from fastapi.datastructures import QueryParams
 from src.models.userModel import User
-from src.schemas.userSchema import UserReturnSchema
-from . import SuperService, pagination
+from src.schemas.userSchema import UserEditSchema   
+from . import SuperService
+
+from sqlalchemy import Select, select, Insert, func, case
 
 class UserService:
 
-    def __init__(self):
-        self.connect = sql.connect("databases/dataBank.db")
-        self.cursor = self.connect.cursor()
+    def get_all_users(
+            self, 
+            query_params: QueryParams
+        ) -> tuple[list[dict[str, Any] | None], int | None]:
 
-    def read_all_users(self, query_params: QueryParams):
-
-        users = SuperService(self.connect).find(column_query="id, name, email", table="users", page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
-
-        found_users: list[UserReturnSchema] = []
-
-        for user in users: 
-            id, name, email = user
-            found_users.append(UserReturnSchema(
-                id=id,
-                name=name,
-                email=email,
-                ))
-        
-        output = pagination(connection=self.connect, table="users", itens=found_users, page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
-
-        self.connect.close()
-        return output
-
-    def read_user_by_id(self, path_params: dict[str, Any]):
-
-        id = path_params.get('user_id')
-        user_found = SuperService(self.connect).find(column_query="id, name, email", table="users", collumns=["id"], data=[id,])
-        
-        if not user_found:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
-
-        user_found = user_found[0]
-            
-        id, name, email = user_found
-        found_users = UserReturnSchema(
-            id=id,
-            name=name,
-            email=email,
+        stmt = select(User)
+        users, total = SuperService().get_all_with_pagination(
+            stmt, 
+            page=int(query_params.get("page", 1)), 
+            rows_per_page=int(query_params.get("rows_per_page", 10))
         )
 
-        self.connect.close()
-        return found_users
+        user_list = [user.to_dict() for user in users] # Converts in list and the itens of the list in dicts
 
-    def read_user_by_email_likewise(self, path_params: dict[str, Any], query_params: QueryParams):
+        return user_list, total
 
-        user_found = SuperService(self.connect).find_like(column_query="id, name, email", table="users", column="email", target=str(path_params.get("user_email")), page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
+    def get_user_by_id(
+            self, 
+            user_id: int
+        ) -> dict[str, Any] | None:
+
+        user = SuperService().get_by_id(user_id, User)
         
-        if not user_found:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
+        if user is None:
+            return None
+        
+        return user.to_dict()
 
-        found_users: list[UserReturnSchema] = []
+    def get_user_by_similarity_to_email(
+            self,
+            email: str,
+            query_params: QueryParams
+        ) -> tuple[list[dict[str, Any] | None], int | None]:
 
-        for user in user_found:
-            id, name, email, card_id = user
-            found_users.append(UserReturnSchema(
-                id=id,
-                name=name,
-                email=email,
-            ))
+        # Ordenação de acordo com similaridade
+        email_1 = f'{email}%'
+        email_2 = f'%{email}%'
+        
+        case_clause = case(
+            (User.email.like(email_1), 1),
+            (User.email.like(email_2), 2),
+            else_=3
+        )
 
-        output = pagination(connection=self.connect, table="users", query=f"WHERE email LIKE '%{path_params.get("user_email")}%' ", itens=found_users, page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
+        stmt = (
+            select(User)
+            .filter(User.email.like(email_2))
+            .order_by(case_clause, User.email.asc())
+        )
+        users, total = SuperService().get_all_with_pagination(
+            stmt,
+            page=int(query_params.get("page", 1)), 
+            rows_per_page=int(query_params.get("rows_per_page", 10))
+        )
 
-        self.connect.close()
-        return output
+        user_list = [user.to_dict() for user in users]
+
+        return user_list, total
     
-    def read_user_by_email(self, query_params: QueryParams):
+    def get_user_by_email(
+            self, 
+            email: str
+        ) -> dict[str, Any] | None:
 
-        user_found = SuperService(self.connect).find(column_query="id, name, email, password", table="users", collumns=["email"], data=[query_params.get("email"),])
-        
-        if not user_found:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
+        stmt = select(User).filter_by(email=email)
+        user = SuperService().get(stmt)
 
-        user = user_found[0]
+        if user is None:
+            return None
 
-        id, name, email, password = user
-        user = User(
-            id=id,
-            name=name,
-            email=email,
-            password=password,
-        )
-
-        self.connect.close()
-        return user
+        return user.to_dict()
  
     
-    def read_user_by_name(self, path_params: dict[str, Any], query_params: QueryParams):
+    def get_user_by_name(
+            self,            
+            name: str,
+            query_params: QueryParams
+        ) -> tuple[list[dict[str, Any] | None], int | None]:
 
-        user_found = SuperService(self.connect).find_like(column_query="id, name, email", table="users", column="name", target=str(path_params.get("user_name")), page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
-
-        if not user_found:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
-
-        found_users: list[UserReturnSchema] = []
-
-        for user in user_found:
-            id, name, email = user
-            found_users.append(UserReturnSchema(
-                id=id,
-                name=name,
-                email=email,
-            ))
+        # Ordenação de acordo com similaridade
+        name_1 = f'{name}%'
+        name_2 = f'%{name}%'
         
-        output = pagination(connection=self.connect, table="users", query=f"WHERE name LIKE '%{path_params.get("user_name")}%' ", itens=found_users, page=int(query_params.get("page", 1)), rows_per_page=int(query_params.get("rows_per_page", 10)))
+        case_clause = case(
+            (User.name.like(name_1), 1),
+            (User.name.like(name_2), 2),
+            else_=3
+        )
 
-        self.connect.close()
-        return output
+        stmt = (
+            select(User)
+            .filter(User.name.like(name_2))
+            .order_by(case_clause, User.name.asc())
+        )
+        users, total = SuperService().get_all_with_pagination(
+            stmt,
+            page=int(query_params.get("page", 1)),
+            rows_per_page=int(query_params.get("rows_per_page", 10)) 
+        )
 
-    def add_user(self, new_user: dict[str, Any]):
+        user_list = [user.to_dict() for user in users]
 
-        user_found = SuperService(self.connect).find(column_query="email", table="users", collumns=["email"], data=[new_user.get("email"),])
-        if user_found:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="email is already in use")
+        return user_list, total
 
-        SuperService(self.connect).add(table="users", item_to_add=new_user)
+    def add_user(
+            self, 
+            new_user: User
+        ) -> dict[str, Any]:
 
-        user = SuperService(self.connect).find(column_query="id", table="users", collumns=["email"], data=[new_user.get("email"),])
-        if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="new user was not found in bank")
+        user = SuperService().add(new_user)
+
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="New user was not subscribed, try again.")
         
-        self.connect.close()
-        return user[0][0]
+        return user.to_dict()
 
-    def update_user(self, id: int, user_to_update: dict[str, Any]):
+    def update_user(
+            self, 
+            user_id: int, 
+            user_to_update: UserEditSchema
+        ) -> dict[str, Any] | None:
 
-        user_found = SuperService(self.connect).find(column_query="id", table="users", collumns=["id"], data=[id,])
-        if not user_found:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
+        user = SuperService().edit_by_id(user_id, User, user_to_update)
         
-        if user_to_update.get("email"):
-            user_found = SuperService(self.connect).find(column_query="id", table="users", collumns=["email"], data=[user_to_update.get("email"),])
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
 
-            if user_found and user_found[0][0] != id: 
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="email is already in use")
+        return user.to_dict()
 
-        SuperService(self.connect).edit(table="users", item_to_update=user_to_update, query=f"WHERE id = '{id}'; ")
+    def kill_yourself(self, user_id: int):
 
-        self.connect.close()
-        return id
-
-    def kill_yourself(self, id: int):
-
-        user_found = SuperService(self.connect).find(column_query="id", table="users", collumns=["id"], data=[id,])
-        if not user_found:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
-
-        SuperService(self.connect).delete(table="users", query=f"WHERE id = '{id}'")
+        user = SuperService().delete_by_id(user_id, User)
         
-        user_found = SuperService(self.connect).find(column_query="id", table="users", collumns=["id"], data=[id,])
-        if user_found:
-            raise HTTPException(status_code=status.WS_1013_TRY_AGAIN_LATER, detail="user was not deleted correctly")
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
 
-        self.connect.close()
-        return id
+        return user.to_dict()

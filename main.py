@@ -2,7 +2,6 @@ import os, uvicorn
 from fastapi import FastAPI
 from src.controllers import userControllers, cardControllers, authControllers
 from fastapi.middleware.cors import CORSMiddleware
-from src.database import create_database
 
 app = FastAPI(title="PokeTreiner", description="An Pokemon Card Social Midia API")
 
@@ -31,5 +30,4 @@ app.include_router(cardControllers.router)
 
 # ---- MAIN ----
 if __name__ == '__main__':
-    create_database()
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)), reload=True)

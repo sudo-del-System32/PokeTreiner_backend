@@ -27,23 +27,28 @@ def get_current_user(token: token_dependency):
         user_id = payload.get("id")
 
         if not user_id:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user is not authorized")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="user is not authorized"
+            )
 
-        user = UserService().read_user_by_id({"user_id": user_id})
+        user = UserService().get_user_by_id(user_id)
 
-        # Ja feito na funçao user id
-        # if not user:
-        #     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="user not found"
+            )
 
-        return user.model_dump(exclude_unset=True)
+        return user
 
     except ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="expired token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Expired token.")
     
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"invalid token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid token.")
 
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Error in user authorization")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Error in user authorization.")
 
 user_dependency = Annotated[dict[str, Any], Depends(get_current_user)]
