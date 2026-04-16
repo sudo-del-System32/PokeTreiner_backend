@@ -20,4 +20,3 @@ async def refresh_token(refresh_token: str):
 @router.post("/me")
 async def me(request: Request, user: user_dependency):
     return user
-    # return UserService().read_user_by_id({"user_id": user.get("id")}) o user_dependency ja acha o usuario

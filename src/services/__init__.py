@@ -1,270 +1,161 @@
-import sqlite3 as sql
-from typing import Any
 from fastapi import HTTPException, status
-from math import ceil
-
-
-def pagination(
-    connection: sql.Connection, 
-    table: str,
-    query: str = " ", 
-    itens: list = [],
-    page: int = 1,
-    rows_per_page: int = 1
-    ):
-
-    # Verificaçoes basicas
-    if page < 1:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page may not be less than 1")
-    
-    if rows_per_page < 1:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="rows per page may not be less than 1")
-
-    try:
-        cursor = connection.execute(f"""
-                SELECT COUNT(*)
-                FROM {table}
-                {query}
-            """
-        )
-    
-        itens_count = cursor.fetchone() 
-        itens_count = itens_count[0] if itens_count else 0
-        pages_count = ceil(itens_count/rows_per_page)
-
-        next = None if pages_count - page < 1 else page + 1
-        prev = None if page - 1 < 1 else page - 1
-
-        if not next and prev and page > pages_count:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="page not found")
-
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-    
-    return {
-        "itens": itens,
-        "pagination": {
-            "pages_count": pages_count,
-            "itens_count": itens_count,
-            "itens_per_page": rows_per_page,
-            "prev": prev,
-            "next": next,
-            "current": page
-        },
-        "error": False,
-    }
-
-def pagination_like(
-        connection: sql.Connection, 
-        table: str,
-        column: str,
-        target: str, 
-        itens: list = [],
-        page: int = 1,
-        rows_per_page: int = 1
-    ):
-
-    # Verificaçoes basicas
-    if page < 1:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="page may not be less than 1")
-    
-    if rows_per_page < 1:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="rows per page may not be less than 1")
-    
-    try:
-        cursor = connection.execute(f"""
-                SELECT COUNT()
-                FROM {table}
-                WHERE {column} LIKE '%{target}%'
-            """
-        )
-
-        itens_count = cursor.fetchone() 
-        itens_count = itens_count[0] if itens_count else 0
-        pages_count = ceil(itens_count/rows_per_page)
-
-        next = None if pages_count - page < 1 else page + 1
-        prev = None if page - 1 < 1 else page - 1
-
-        if not next and prev and page < pages_count:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="page not found")
-        
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
-    return {
-        "itens": itens,
-        "pagination": {
-            "pages_count": pages_count,
-            "itens_count": itens_count,
-            "itens_per_page": rows_per_page,
-            "prev": prev,
-            "next": next,
-            "current": page
-        },
-        "error": False,
-    }
-
-
+from sqlalchemy import Select, select, func
+from src import Model, db, session_db
+from typing import Any
 
 class SuperService():
-
-    def __init__(self, connection: sql.Connection):
-        self.connection = connection
-        self.cursor = connection.cursor()
-
-    def add(self,
-            table: str, 
-            item_to_add: dict[str, Any]
-        ):
-
-        key_placement: str = " "
-        value_placement: str = " "
-        for item in item_to_add.keys():
-            key_placement = key_placement + str(item) + "," 
-            value_placement = value_placement + "?" + ","
-
-        # WHAT AM I DOING
-        key_placement = key_placement[:-1]
-        value_placement = value_placement[:-1]
-        
+    def get_all_with_pagination(
+        self,
+        statement: Select,
+        page: int = 1,
+        rows_per_page: int = 10
+    ):
+        offset = (page - 1) * rows_per_page
+        limit = rows_per_page if rows_per_page >= 0 else 10 
+        # Devido ao limit negativo pegar todos os arquivos do banco e isso pode quebrar tudo
+       
         try:
-            self.cursor.execute(f"""
-                    INSERT INTO users
-                    ({key_placement})
-                    VALUES
-                    ({value_placement})
-                """,
-                tuple(item_to_add.values())
-            )
-            self.connection.commit()
+            stmt_with_pagination = statement.offset(offset).limit(limit)
+            record_list = session_db.execute(stmt_with_pagination).scalars().all()
             
+            coumt_stmt = select(func.count()).select_from(statement.subquery()) 
+            total = session_db.execute(coumt_stmt).scalar()
+       
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Databank error.\n{e}")
 
-        return True
+        return record_list, total
 
-    def find(self, 
-            column_query: str,
-            table: str, 
-            collumns: list[str] = [], 
-            data: list = [],
-            page: int = 1,
-            rows_per_page: int = 1
-        ) -> list[tuple[Any]]:
-
-        query: str = "WHERE TRUE OR ?"
-        query_2 = ("TRUE", )
-        
-        if collumns and data :
-            query = "WHERE "
-            query_2 = tuple(data)
-
-            for col in collumns:
-                query = query +  col + " = " + "?" + ","
-
-            query = query[:-1]
-
-        query_2 = query_2 + (rows_per_page, rows_per_page*(page-1))
-
+    def get_all_without_pagination(
+        self,
+        statement: Select,
+    ):
         try:
-
-            cursor = self.connection.execute(f"""
-                    SELECT {column_query}
-                    FROM {table}
-                    {query}
-                    LIMIT ?
-                    OFFSET ?
-                """,
-                query_2 
-            )
-    
+            record_list = session_db.execute(statement).scalars().all()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Databank error.\n{e}")
 
-        return cursor.fetchall()
+        return record_list
 
-    def find_like(self, 
-            column_query: str,
-            table: str, 
-            column: str,
-            target: str, 
-            page: int = 1,
-            rows_per_page: int = 1
+    def get(
+            self,
+            statement: Select
+    ):
+        try:
+            record = session_db.execute(statement).scalar_one_or_none()
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Databank error.\n{e}")
+
+        return record 
+
+    def get_by_id(
+            self,
+            record_id: int, 
+            record_class: type[Model]
+    ) -> Any | None:
+        try:
+            stmt = select(record_class).filter_by(id=record_id)
+            record = session_db.execute(stmt).scalar_one_or_none()
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Databank error.\n{e}")
+
+        return record
+    
+    def add(
+            self,
+            record
         ):
-        target = '%' + target + '%'
-
-        # Verify the query for slq injection with pedro
-        
         try:
-            cursor = self.connection.execute(f"""
-                    SELECT {column_query}
-                    FROM {table}
-                    WHERE {column} LIKE ?
-                    ORDER BY CASE
-                        WHEN {column} LIKE ? THEN 1
-                        WHEN {column} LIKE ? THEN 2
-                        ELSE 3
-                    END
-                    LIMIT ?
-                    OFFSET ?
-                """,
-                (target, target, target, rows_per_page, rows_per_page*(page-1))
-            )
-    
+            session_db.add(record)
+            session_db.commit()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-        
-        return cursor.fetchall()
-    
-    def edit(self,
-            table: str,
-            query: str,
-            item_to_update: dict[str, Any]
+            session_db.rollback()
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Databank error.\n{e}")
+
+        return record
+
+    def edit(
+            self,
+            statement: Select,
+            fields
         ):
+        record = self.get(statement)
         
-        update_query: str = " " # TURN MORE LIKE ADD
-        values: list = []
-        for item in item_to_update.items():
-            if item[1]:
-                update_query += item[0] + " = " + "?" + ","
-                values.append(str(item[1]))
-
-        update_query = update_query[:-1]
-
+        if record is None:
+            return None
+        
         try:
-            self.cursor.execute(f"""
-                UPDATE {table}
-                SET 
-                {update_query}
-                {query}
-                """,
-                tuple(values)
-            )
-    
-            self.connection.commit()
+            updated_fields: dict = fields.model_dump(exclude_unset=True)
 
+            for field, value in updated_fields.items():
+                if value is not None:
+                    setattr(record, field, value)
+
+            session_db.commit()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+            session_db.rollback()
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Databank error.\n{e}")
 
-        return True
+        return record
     
-    def delete(self,
-            table: str,
-            query: str,
+    def edit_by_id(
+            self,
+            record_id: int,
+            record_class: type[Model],
+            fields
         ):
+        record = self.get_by_id(record_id, record_class)
+        
+        if record is None:
+            return None
+        
+        try:
+            updated_fields: dict = fields.model_dump(exclude_unset=True)
+
+            for field, value in updated_fields.items():
+                if value is not None:
+                    setattr(record, field, value)
+
+            session_db.commit()
+        except Exception as e:
+            session_db.rollback()
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Databank error.\n{e}")
+
+        return record
+    
+    def delete(
+            self,
+            statement: Select
+        ):
+        record = self.get(statement)
+        
+        if record is None:
+            return None
 
         try:
-            self.cursor.execute(f"""
-                DELETE 
-                FROM {table}
-                {query}    
-                """
-            )
-
-            self.connection.commit()
-
+            session_db.delete(record)
+            session_db.commit()
         except Exception as e:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+            session_db.rollback()
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Databank error.\n{e}")
 
-        return True
+        return record
+    
+    def delete_by_id(
+            self,
+            record_id: int,
+            record_class: type[Model]
+        ):
+        record = self.get_by_id(record_id, record_class)
+        
+        if record is None:
+            return None
+
+        try:
+            session_db.delete(record)
+            session_db.commit()
+        except Exception as e:
+            session_db.rollback()
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Databank error.\n{e}")
+
+        return record
