@@ -14,7 +14,7 @@ class UserAdapter:
 
         for user in users:
             if user is not None:
-                user.update({'password': 'secret'})
+                user.pop('password')
 
         output = get_pagination(users, total)
     
@@ -32,8 +32,8 @@ class UserAdapter:
                 detail="User with this id was not found."
             )
             
-        user.update({'password': 'secret'})
-        
+        user.pop('password')
+    
         return {
                 "data": user,
                 "error": False 
@@ -45,7 +45,7 @@ class UserAdapter:
 
         for user in users:
             if user is not None:
-                user.update({'password': 'secret'})
+                user.pop('password')
     
         output = get_pagination(users, total)
     
@@ -59,7 +59,7 @@ class UserAdapter:
 
         for user in users:
             if user is not None:
-                user.update({'password': 'secret'})
+                user.pop('password')
 
         output = get_pagination(users, total)
     
