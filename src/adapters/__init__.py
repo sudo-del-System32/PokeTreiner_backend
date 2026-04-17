@@ -2,7 +2,7 @@ from typing import Any
 from math import ceil
 
 def get_pagination(
-        items: list[dict[str, Any] | None], 
+        items: list[dict[str, Any]] | list[None], 
         items_count: int | None, 
         page: int = 1, 
         rows_per_page: int = 10
