@@ -12,7 +12,7 @@ class UserService:
     def get_all_users(
             self, 
             query_params: QueryParams
-        ) -> tuple[list[dict[str, Any] | None], int | None]:
+        ) -> tuple[list[dict[str, Any]] | list[None], int | None]:
 
         stmt = select(User)
         users, total = SuperService().get_all_with_pagination(
@@ -41,7 +41,7 @@ class UserService:
             self,
             email: str,
             query_params: QueryParams
-        ) -> tuple[list[dict[str, Any] | None], int | None]:
+        ) -> tuple[list[dict[str, Any]] | list[None], int | None]:
 
         # Ordenação de acordo com similaridade
         email_1 = f'{email}%'
@@ -86,7 +86,7 @@ class UserService:
             self,            
             name: str,
             query_params: QueryParams
-        ) -> tuple[list[dict[str, Any] | None], int | None]:
+        ) -> tuple[list[dict[str, Any]] | list[None], int | None]:
 
         # Ordenação de acordo com similaridade
         name_1 = f'{name}%'
@@ -129,7 +129,7 @@ class UserService:
             self, 
             user_id: int, 
             user_to_update: UserEditSchema
-        ) -> dict[str, Any] | None:
+        ) -> dict[str, Any]:
 
         user = SuperService().edit_by_id(user_id, User, user_to_update)
         
@@ -138,7 +138,10 @@ class UserService:
 
         return user.to_dict()
 
-    def kill_yourself(self, user_id: int):
+    def kill_yourself(
+            self, 
+            user_id: int
+        ) -> dict[str, Any]:
 
         user = SuperService().delete_by_id(user_id, User)
         
