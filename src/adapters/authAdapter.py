@@ -1,14 +1,20 @@
 
 from fastapi import HTTPException, status, Depends
-from src import SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES, email_validator, REFRESH_TOKEN_SECRET_KEY, REFRESH_TOKEN_EXPIRE_DAYS, ALGORITHM_TO_HASH
+from src import (
+    SECRET_KEY, 
+    ACCESS_TOKEN_EXPIRE_MINUTES, 
+    email_validator, 
+    REFRESH_TOKEN_SECRET_KEY, 
+    REFRESH_TOKEN_EXPIRE_DAYS, 
+    ALGORITHM_TO_HASH,
+    bcrypt_that_works
+)
 from datetime import timedelta
 from src.services.userService import UserService
-from src.services import SuperService 
 from src.services.authService import create_tolkien 
-
-from src.controllers import form_auth_dependency
-
+from src.controllers import form_auth_dependency   
 from jose import jwt, ExpiredSignatureError, JWTError
+
 
 class AuthAdapter:
 
@@ -25,7 +31,7 @@ class AuthAdapter:
                 detail="Email or password is incorrect."
             )
         
-        if data.password != user.get("password"): 
+        if not bcrypt_that_works.verify(data.password, user.get("password")): 
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Email or password is incorrect."
